@@ -12,7 +12,7 @@
 #define FILE_LAST_MOD     0b000010
 #define FILE_SIZE         0b000100
 #define FILE_TYPE         0b001000
-#define FILE_PROTECTIONs  0b010000
+#define FILE_PROTECTIONS  0b010000
 #define FILE_ALL          0b100000
 
 
@@ -22,6 +22,12 @@ void show_file_info(const char* path, int flags){
   stat(path, &statbuf);
   if (flags & FILE_LAST_ACCESS){
     printf("File last access is: %ld\n", statbuf.st_ctim.tv_sec);
+  }
+  if (flags & FILE_LAST_MOD){
+    printf("File last modification is: %ld\n", statbuf.st_atim.tv_sec);
+  }
+  if (flags & FILE_SIZE){
+    printf("File size is: %ld bytes\n", statbuf.st_size);
   }
   if (flags & FILE_TYPE){
     if ((statbuf.st_mode & S_IFMT) == S_IFREG)
@@ -34,6 +40,21 @@ void show_file_info(const char* path, int flags){
       printf("Block device file\n");
     if ((statbuf.st_mode & S_IFMT) == S_IFCHR)
       printf("Character device\n");
+  }
+  if (flags & FILE_PROTECTIONS){
+    char perm[10];
+    mode_t mode = statbuf.st_mode;
+    perm[0] = (mode & S_IRUSR) ? 'r' : '-';
+    perm[1] = (mode & S_IWUSR) ? 'w' : '-';
+    perm[2] = (mode & S_IXUSR) ? 'x' : '-';
+    perm[3] = (mode & S_IRGRP) ? 'r' : '-';
+    perm[4] = (mode & S_IWGRP) ? 'w' : '-';
+    perm[5] = (mode & S_IXGRP) ? 'x' : '-';
+    perm[6] = (mode & S_IROTH) ? 'r' : '-';
+    perm[7] = (mode & S_IWOTH) ? 'w' : '-';
+    perm[8] = (mode & S_IXOTH) ? 'x' : '-';
+    perm[9] = '\0';
+    printf("File permissions: %s\n", perm);
   }
 }
 
@@ -88,13 +109,17 @@ int main(int argc, char** argv){
   strncpy(dir, ".", 256);
   
   // parse options
-  while ((opt = getopt(argc, argv, "w:f:l:dt")) != -1){
+  while ((opt = getopt(argc, argv, "w:f:l:dtmspa")) != -1){
     switch (opt){
       case 'w': strncpy(dir, optarg, 256); break;
       case 'f': strncpy(file_name_pattern, optarg, 256); break;
       case 'l': level = atoi(optarg); break;
       case 'd': extra_flags |= FILE_LAST_ACCESS; break;
       case 't': extra_flags |= FILE_TYPE; break;
+      case 'm': extra_flags |= FILE_LAST_MOD; break;
+      case 's': extra_flags |= FILE_SIZE; break;
+      case 'p': extra_flags |= FILE_PROTECTIONS; break;
+      case 'a': extra_flags = FILE_LAST_ACCESS | FILE_LAST_MOD | FILE_TYPE | FILE_SIZE | FILE_PROTECTIONS;break;
       default:
               exit(1);
     }
