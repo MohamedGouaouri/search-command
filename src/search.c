@@ -76,9 +76,10 @@ void find(const char *name, const char* file_to_find, int level, int flags)
     DIR *dir;
     struct dirent *entry;
 
-    if (!(dir = opendir(name)) || level == -1)
+    if (((dir = opendir(name)) == NULL) || (level < 0)){
         // le cas particulier
         return;
+    }
 
     while ((entry = readdir(dir)) != NULL) {
         
