@@ -31,7 +31,7 @@ where:
 -a to show all the above information
 ```
 ### Example
-```
+```bash
 export $PATH=$PATH:./search
-.search -w . -l 2 -a -f "example*"
+search -w . -l 2 -a -f "example*"
 ```
