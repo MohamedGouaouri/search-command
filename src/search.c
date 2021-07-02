@@ -16,9 +16,6 @@
 #define FILE_PROTECTIONS  0b010000
 #define FILE_ALL          0b100000
 
-void show_banner(){
-  
-}
 
 void show_file_info(const char* path, int flags){
   struct stat statbuf;
