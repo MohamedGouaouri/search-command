@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <fnmatch.h>
+#include <time.h>
 
 
 #define FILE_LAST_ACCESS  0b000001
@@ -15,16 +16,28 @@
 #define FILE_PROTECTIONS  0b010000
 #define FILE_ALL          0b100000
 
-
+void show_banner(){
+  
+}
 
 void show_file_info(const char* path, int flags){
   struct stat statbuf;
   stat(path, &statbuf);
   if (flags & FILE_LAST_ACCESS){
-    printf("File last access is: %ld\n", statbuf.st_ctim.tv_sec);
+    time_t attime = statbuf.st_atime;
+    struct tm alt;
+    localtime_r(&attime, &alt);
+    char atimebuf[100];
+    strftime(atimebuf, sizeof(atimebuf), "%c", &alt);
+    printf("Time of last access is: %s\n", atimebuf);
   }
   if (flags & FILE_LAST_MOD){
-    printf("File last modification is: %ld\n", statbuf.st_atim.tv_sec);
+    time_t mttime = statbuf.st_mtime;
+    struct tm mlt;
+    localtime_r(&mttime, &mlt);
+    char mtimebuf[100];
+    strftime(mtimebuf, sizeof(mtimebuf), "%c", &mlt);
+    printf("Time last modification is: %s\n", mtimebuf);
   }
   if (flags & FILE_SIZE){
     printf("File size is: %ld bytes\n", statbuf.st_size);
@@ -33,7 +46,7 @@ void show_file_info(const char* path, int flags){
     if ((statbuf.st_mode & S_IFMT) == S_IFREG)
       printf("File type is: Regular\n");
     if ((statbuf.st_mode & S_IFMT) == S_IFSOCK)
-      printf("Socket file\n");
+      printf("File type is: Socket file\n");
     if ((statbuf.st_mode & S_IFMT) == S_IFLNK)
       printf("Symbolic link file\n");
     if ((statbuf.st_mode & S_IFMT) == S_IFBLK)
@@ -81,11 +94,11 @@ void find(const char *name, const char* file_to_find, int level, int flags)
             find(path, file_to_find, level, flags);
         } else {
           if (fnmatch(file_to_find, entry->d_name, 0) == 0){
-            printf("File found in %s\n", name);
+            printf("File %s found in %s\n", entry->d_name, name);
             char path_to_file[1024];
             snprintf(path_to_file, sizeof(path_to_file), "%s/%s", name, entry->d_name);
             show_file_info(path_to_file, flags);
-
+            printf("**************************************\n");
           }
         }
     }
@@ -96,7 +109,7 @@ void find(const char *name, const char* file_to_find, int level, int flags)
 
 
 void printUsage(){
-  
+  printf("search -w <dir> -l <level> -f <file name pattern> -dtmsp |\n");
 }
 
 int main(int argc, char** argv){
@@ -121,11 +134,12 @@ int main(int argc, char** argv){
       case 'p': extra_flags |= FILE_PROTECTIONS; break;
       case 'a': extra_flags = FILE_LAST_ACCESS | FILE_LAST_MOD | FILE_TYPE | FILE_SIZE | FILE_PROTECTIONS;break;
       default:
-              exit(1);
+            printUsage();
+            exit(EXIT_FAILURE);
     }
   }
   
   find(dir, file_name_pattern, level, extra_flags);
 
-  exit(0);
+  exit(EXIT_SUCCESS);
 }
