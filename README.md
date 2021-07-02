@@ -32,5 +32,6 @@ where:
 ```
 ### Example
 ```
-./build/search -w . -l 2 -a -f "example*"
+export $PATH=$PATH:./search
+.search -w . -l 2 -a -f "example*"
 ```
